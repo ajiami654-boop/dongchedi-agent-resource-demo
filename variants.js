@@ -5,7 +5,7 @@ const names = {chart:'车系差评率对比',html:'车主差评分析报告'};
 const toolbar=document.createElement('nav');toolbar.className='scheme-bar';toolbar.setAttribute('aria-label','展示方案对比');
 toolbar.innerHTML='<span class="scheme-caption">资源展示方案</span>'+['① 卡片','② 缩略图','③ 按钮','④ 末尾集中'].map((label,i)=>`<button data-scheme="${i+1}">${label}</button>`).join('')+'<span id="scheme-description"></span><button id="scheme-replay">重新播放</button>';
 document.querySelector('#topbar').after(toolbar);
-const panel=document.createElement('aside');panel.id='resource-inspector';panel.hidden=true;panel.innerHTML='<header><strong id="inspector-title"></strong><button id="inspector-close" aria-label="关闭资源详情">'+icon('Close')+'</button></header><div id="inspector-body"></div>';
+const panel=document.createElement('aside');panel.id='resource-inspector';panel.hidden=true;panel.innerHTML='<header><strong id="inspector-title"></strong><button type="button" class="inspector-dashboard-link" data-action="dashboard">打开仪表板</button><button id="inspector-close" aria-label="关闭资源详情">'+icon('Close')+'</button></header><div id="inspector-body"></div>';
 document.querySelector('#resources').after(panel);
 const divider=document.createElement('div');divider.id='resource-divider';divider.setAttribute('role','separator');divider.setAttribute('aria-label','调整资源面板宽度');divider.setAttribute('aria-orientation','vertical');divider.tabIndex=0;panel.before(divider);
 const resize=(x)=>{const app=document.querySelector('#app');const width=Math.min(800,Math.max(380,x-app.getBoundingClientRect().left-app.clientLeft));app.style.setProperty('--chat-detail-width',width+'px');};

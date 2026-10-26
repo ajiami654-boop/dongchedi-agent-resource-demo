@@ -1,4 +1,4 @@
-import { applyVariant, initializeVariants, variant, openInspector } from './variants.js?v=20261016e';
+import { applyVariant, initializeVariants, variant, openInspector } from './variants.js?v=20261026b';
 import { resources, series, initialQuestion, finalAnswer } from './data.js';
 import { icon, resourceIcon, report, chart, stages, question, escapeHtml } from './render.js?v=20261016d';
 import { dashboardMarkup, componentEditorMarkup, dashboardWidgets } from './dashboard.js?v=20261026';
@@ -59,7 +59,7 @@ const actions={
  replay:()=>replay(),restore:complete,new:()=>{cancel();messages.innerHTML='<section class="block"><h2>有什么需要分析的？</h2><p class="dialog-note">输入需求可播放懂车帝差评分析示例。</p></section>';prompt.value=initialQuestion;send.disabled=false;prompt.focus();},
  share:()=>openDetail('分享会话','<p>这是本地模拟会话，未连接 Test 分享服务。</p><button class="outline" style="width:auto" data-action="copy-link">复制本地演示地址</button>'),
  'copy-link':async()=>{try{await navigator.clipboard.writeText(location.href);toast('已复制本地演示地址');}catch{toast('复制失败，请复制浏览器地址');}},
- report:()=>resourceDetail('车主差评分析报告'),chart:()=>resourceDetail('车系差评率对比'),small:()=>$('#app').classList.toggle('small-window'),
+ report:()=>resourceDetail('车主差评分析报告'),chart:()=>resourceDetail('车系差评率对比'),dashboard:()=>resourceDetail('自动化回填配置看板'),small:()=>$('#app').classList.toggle('small-window'),
  agent:()=>openDetail('创建Agent','<p>此入口仅作展示。当前演示不会创建或发布真实 Agent。</p>'),
  add:()=>openDetail('添加资源','<p>本地演示使用截图内固定资源，不上传或创建真实资源。</p>'),
  mention:()=>{prompt.value+='@';prompt.focus();send.disabled=false;toast('可在右侧资源列表查看资源');},
@@ -97,5 +97,6 @@ $('#resource-search').oninput=renderResources;$('#ai-only').onchange=renderResou
 document.addEventListener('change',(event)=>{if(event.target.closest('.report-filters')){toast('截图未提供筛选明细，保留原始统计，不模拟筛选结果');}});
 new ResizeObserver(()=>{const width=$('#workspace').clientWidth;const ratio=Math.min(.92,Math.max(.52,.92-.24*(width-400)/1412));$('#workspace').style.setProperty('--gutter',`${Math.max(0,Math.round(width*(1-ratio)/2*.94))}px`);}).observe($('#workspace'));
 renderResources();complete();initializeVariants({onChange:complete,onReplay:()=>replay()});
+if(new URLSearchParams(location.search).get('view')==='dashboard')resourceDetail('自动化回填配置看板');
 // 独立演示的可观测状态，用于核验回放而非连接生产运行时。
 window.demoState=()=>({running,replayIndex,stages:stages.filter(([id])=>document.getElementById(id)).map(([id])=>id)});
