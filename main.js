@@ -1,6 +1,7 @@
 import { applyVariant, initializeVariants, variant, openInspector } from './variants.js?v=20261016e';
 import { resources, series, initialQuestion, finalAnswer } from './data.js';
 import { icon, resourceIcon, report, chart, stages, question, escapeHtml } from './render.js?v=20261016d';
+import { dashboardMarkup, componentEditorMarkup, dashboardWidgets } from './dashboard.js?v=20261026';
 const $ = (selector) => document.querySelector(selector);
 const messages = $('#messages'), conversation = $('#conversation'), prompt = $('#prompt'), send = $('#send');
 let timers = [], running = false, replayIndex = 0, following = true;
@@ -19,11 +20,16 @@ const complete = () => {
 };
 const openDetail = (name,html) => { $('#detail-title').textContent=name; $('#detail-content').innerHTML=html; if(!$('#detail').open) $('#detail').showModal(); };
 const resourceDetail = (name) => {
- if(name==='车主差评分析报告') openInspector(name,report());
+ $('#resource-inspector').classList.toggle('dashboard-inspector',name==='自动化回填配置看板');
+ if(name==='自动化回填配置看板') openInspector(name,dashboardMarkup());
+ else if(name==='车主差评分析报告') openInspector(name,report());
  else if(name.includes('车系差评率')) openInspector(name,chart()+`<table class="detail-table"><thead><tr><th>车系</th><th>发言量</th><th>差评量</th><th>差评率</th></tr></thead><tbody>${series.map(([n,total,bad])=>`<tr><td>${n}</td><td>${total}</td><td>${bad}</td><td>${(bad/total*100).toFixed(1)}%</td></tr>`).join('')}</tbody></table>`);
  else if(name==='差评主题构成') { openInspector(name,report()); const root=$('#inspector-body'); const frame=root.querySelector('.report-frame');frame.scrollTop=root.querySelector('.report section').offsetTop-frame.offsetTop; }
  else openInspector(name,'<p>当前截图未包含该资源的详情。</p><p class="dialog-note">此演示只还原提供的会话和图表，不虚构未提供的数据。</p>');
 };
+const componentEditor=document.createElement('div');componentEditor.id='component-editor';componentEditor.hidden=true;document.body.append(componentEditor);
+const openComponentEditor=(id)=>{if(!dashboardWidgets[id])return;componentEditor.innerHTML=componentEditorMarkup(id);componentEditor.hidden=false;document.body.style.overflow='hidden';};
+const closeComponentEditor=()=>{componentEditor.hidden=true;componentEditor.innerHTML='';document.body.style.overflow='';};
 const popover = () => { const rect=$('#session-menu').getBoundingClientRect(); const el=$('#session-popover'); el.style.top=`${rect.bottom+8}px`;el.style.left=`${Math.min(rect.left,innerWidth-240)}px`;el.hidden=!el.hidden; };
 const setProcessCollapsed = (collapsed) => {
  messages.classList.toggle('process-collapsed',collapsed);
@@ -64,6 +70,12 @@ const actions={
  copy:async()=>{const div=document.createElement('div');div.innerHTML=finalAnswer;try{await navigator.clipboard.writeText(div.textContent);toast('已复制回答');}catch{toast('复制失败，请选中正文复制');}}
 };
 document.addEventListener('click',(event)=>{
+ const editorClose=event.target.closest('[data-editor-close]');if(editorClose){closeComponentEditor();return;}
+ const dashboardClose=event.target.closest('[data-dashboard-close]');if(dashboardClose){$('#inspector-close').click();return;}
+ const dashboardEdit=event.target.closest('[data-dashboard-edit]');if(dashboardEdit){openComponentEditor(dashboardEdit.dataset.dashboardEdit);return;}
+ const dashboardExpand=event.target.closest('[data-dashboard-expand]');if(dashboardExpand){if(dashboardExpand.dataset.dashboardExpand==='all')openComponentEditor('total');else openComponentEditor(dashboardExpand.dataset.dashboardExpand);return;}
+ const dashboardAction=event.target.closest('[data-dashboard-action]');if(dashboardAction){toast(`${dashboardAction.dataset.dashboardAction} · 静态演示`);return;}
+ const selectedWidget=event.target.closest('[data-widget]');if(selectedWidget){document.querySelectorAll('.db-widget.is-selected').forEach(widget=>{widget.classList.remove('is-selected');widget.setAttribute('aria-selected','false');});selectedWidget.classList.add('is-selected');selectedWidget.setAttribute('aria-selected','true');return;}
  const target=event.target.closest('button');
  if(target?.dataset.action){actions[target.dataset.action]?.();$('#session-popover').hidden=true;return;}
  if(target?.dataset.resource){resourceDetail(target.dataset.resource);return;}
@@ -73,6 +85,7 @@ document.addEventListener('click',(event)=>{
  const header=event.target.closest('.card-header');if(header){const card=header.closest('.resource-card');const collapsed=card.classList.toggle('collapsed');const toggle=card.querySelector('.card-toggle');toggle.setAttribute('aria-expanded',String(!collapsed));toggle.setAttribute('aria-label',collapsed?'展开预览':'收起预览');return;}
  if(!event.target.closest('#session-popover')) $('#session-popover').hidden=true;
 });
+document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&!componentEditor.hidden)closeComponentEditor();if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-widget]')){event.preventDefault();event.target.click();}});
 $('#close-detail').onclick=()=>$('#detail').close();
 $('#detail').addEventListener('click',(e)=>{if(e.target===$('#detail'))$('#detail').close();});
 $('#composer').onsubmit=(event)=>{event.preventDefault();if(running){cancel();setActiveToolGroup();document.querySelectorAll('.running').forEach(e=>e.classList.remove('running'));if($('#live-status')) $('#live-status').textContent='已停止';if($('#run-label'))$('#run-label').textContent='已停止';toast('已停止模拟，可从会话菜单重新播放');return;}if(prompt.value.trim())replay(prompt.value.trim());};
