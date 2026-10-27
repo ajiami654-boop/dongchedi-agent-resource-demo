@@ -4,6 +4,7 @@ export const themes = [['购买否定',20],['噪音异响',14],['安全担忧',1
 export const initialQuestion = '分析懂车帝评论的差评，生成一份差评分析报告。';
 export const resources = [
  ['自动化回填配置看板','dashboard',0,true],
+ ['自动化配置总数','kpi',1,true],['字段提交方式分布','chart',1,true],['状态分布','chart',1,true],['触发方式与状态交叉','chart',1,true],['空间配置排行','chart',1,true],
  ['新建故事板','story',0,false],['闪卡话题分布','analysis',0,true],['话题分布环形图','chart',1,true],['话题排行榜','chart',1,true],['闪卡学习明细','analysis',0,true],['学习KPI','analysis',0,true],['KPI_总卡片数','kpi',1,true],['KPI_平均答案长度','kpi',1,true],['难度分布','analysis',0,true],['KPI_简短占比','kpi',1,true],['难度分布图','chart',1,true],['各话题难度','analysis',0,true],['各话题难度图','chart',1,true],['英语闪卡学习情况英语闪卡学习情况…','dashboard',0,true],['英语闪卡学习复盘','story',0,true],['分析表1_分析-分析表1','excel',0,false],
  ...['车主参与度','车主评论占比','独立评论者数','发帖vs回复结构','分析-评论明细','各车系评论热度','品牌评论占比','评论时间分布','评论总量','涉及车系数'].flatMap((n,i)=>i===0?[[`评论明细_${n}`,'excel',0,false],[`图表-评论明细_${n}`,'table',1,false]]:[[`评论明细_${n}`,'excel',0,false]]),
  ['懂车帝评论分析','folder',0,false],['近季度评论明细','analysis',1,true],['品牌评论分布','chart',2,true],['差评主题构成','chart',1,true],['车系差评率对比','chart',1,true],['车系差评率排行','chart',1,true],['发帖回复差评对比','chart',1,true],['车系差评率','analysis',1,true],['车主差评分析报告','html',1,true]

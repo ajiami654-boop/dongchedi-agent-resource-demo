@@ -10,9 +10,24 @@ const cancel = () => { timers.forEach(clearTimeout); timers=[]; running=false; s
 const schedule = (fn,ms) => timers.push(setTimeout(fn,ms));
 const bottom = () => { conversation.scrollTop=conversation.scrollHeight; };
 const locate = (id) => { const element=document.getElementById(id); if(element) conversation.scrollTop=element.offsetTop-20; };
+const dashboardResourceName='自动化回填配置看板';
+const dashboardComponentByName=Object.fromEntries(Object.entries(dashboardWidgets).map(([id,widget])=>[widget.name,id]));
+let dashboardResourcesExpanded=true;
 const renderResources = () => {
  const query=$('#resource-search').value.trim(); const onlyAI=$('#ai-only').checked;
- $('#resource-list').innerHTML=resources.filter(([name,, ,ai])=>(!query||name.includes(query))&&(!onlyAI||ai)).map(([name,type,depth,ai])=>`<button class="resource-row" data-resource="${escapeHtml(name)}" style="padding-left:${depth*20}px" title="${escapeHtml(name)}">${resourceIcon(type)}<span class="label">${name}</span>${ai?'<span class="ai-tag">AI</span>':''}</button>`).join('') || '<p class="dialog-note">没有匹配的资源</p>';
+ const parentMatches=dashboardResourceName.includes(query),childMatches=Object.keys(dashboardComponentByName).some(name=>name.includes(query));
+ const list=$('#resource-list'),scroll=list.scrollTop;
+ list.innerHTML=resources.filter(([name,, ,ai])=>
+  (!query||name.includes(query)||(name===dashboardResourceName&&childMatches)||(dashboardComponentByName[name]&&parentMatches))&&
+  (!onlyAI||ai)&&
+  (dashboardResourcesExpanded||query||!dashboardComponentByName[name])
+ ).map(([name,type,depth,ai])=>{
+  const label=`${resourceIcon(type)}<span class="label">${escapeHtml(name)}</span>${ai?'<span class="ai-tag">AI</span>':''}`;
+  if(name===dashboardResourceName)return `<div class="dashboard-resource-head"><button type="button" class="resource-tree-toggle" data-toggle-dashboard aria-label="${dashboardResourcesExpanded?'收起':'展开'}看板组件" aria-expanded="${dashboardResourcesExpanded}">${dashboardResourcesExpanded?'▾':'▸'}</button><button class="resource-row" data-resource="${escapeHtml(name)}" title="打开${escapeHtml(name)}">${label}</button></div>`;
+  if(dashboardComponentByName[name])return `<button class="resource-row dashboard-child-row" data-widget-resource="${dashboardComponentByName[name]}" title="编辑${escapeHtml(name)}">${label}</button>`;
+  return `<button class="resource-row" data-resource="${escapeHtml(name)}" style="padding-left:${depth*20}px" title="${escapeHtml(name)}">${label}</button>`;
+ }).join('') || '<p class="dialog-note">没有匹配的资源</p>';
+ list.scrollTop=scroll;
 };
 const complete = () => {
  cancel(); messages.classList.remove('process-collapsed'); messages.innerHTML=question()+stages.map(([id,html])=>`<section class="block" id="${id}">${html}</section>`).join('');
@@ -86,6 +101,8 @@ const actions={
  copy:async()=>{const div=document.createElement('div');div.innerHTML=finalAnswer;try{await navigator.clipboard.writeText(div.textContent);toast('已复制回答');}catch{toast('复制失败，请选中正文复制');}}
 };
 document.addEventListener('click',(event)=>{
+ const dashboardTreeToggle=event.target.closest('[data-toggle-dashboard]');if(dashboardTreeToggle){dashboardResourcesExpanded=!dashboardResourcesExpanded;renderResources();return;}
+ const dashboardChild=event.target.closest('[data-widget-resource]');if(dashboardChild){resourceDetail(dashboardResourceName);openComponentEditor(dashboardChild.dataset.widgetResource);return;}
  const editorBack=event.target.closest('.component-inspector .inspector-dashboard-link');if(editorBack){closeComponentEditor();return;}
  const editorClose=event.target.closest('[data-editor-close]');if(editorClose){closeComponentEditor();return;}
  const editorSave=event.target.closest('[data-editor-save]');if(editorSave&&activeEditor){dashboardEdits[activeEditor]={...draftEditor};closeComponentEditor();toast('组件修改已保存到演示看板');return;}
